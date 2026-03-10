@@ -271,6 +271,14 @@ ClaudeTab is about making AI useful for day-to-day testing — the kind of work 
 
 What it can do is handle the volume — so you can focus on the judgment. That's the only use case I built for.
 
+## Feedback & Contributions
+
+ClaudeTab is experimental and actively evolving.
+
+If you’re working on AI-assisted security tooling or have ideas to improve workflows, feel free to open an issue or start a discussion.
+
+Technical critiques and improvements are welcome.
+
 ---
 
 *Built by [n0tsaksham](https://github.com/n0tsaksham)*
