@@ -33,16 +33,16 @@ No Python. No config files. No MCP setup. Just the JAR.
 
 ## Features
 
-### ⏺ Agent Scan — Autonomous Testing
+### ⏺ Agent Scan — Autonomous Testing (3 phases)
 
-Claude receives a `send_request` tool and runs an autonomous loop (up to 50 turns). It:
+**Phase 0 — Application Map**
+Claude reads the full site map + proxy history before firing a single payload. Every endpoint deduplicated by path pattern (`/users/1` → `/users/{id}`). Identifies tech stack, auth flow, user roles, data models.
 
-- Ranks all captured endpoints by true-positive likelihood
-- Sends baseline requests to understand normal behavior
-- Fires targeted payloads (IDOR, SQLi, SSRF, auth bypass, mass assignment, CORS, etc.)
-- Reads each response and decides the next move
-- Only reports findings confirmed with real HTTP response evidence
-- Automatically adds confirmed findings to **Burp Scanner → Issue activity** after the loop
+**Phase 1 — Authenticate**
+If credentials are in the CLAUDE.md brief or prompt, Claude finds the login endpoint from the site map, sends the POST, extracts the JWT, handles MFA skip, and uses the token for all subsequent requests.
+
+**Phase 2 — Targeted Scan**
+Ranked by true-positive likelihood — IDOR candidates first, then injection endpoints, then auth flows. Each finding informs the next test. Only reports findings confirmed with real HTTP response evidence. Confirmed findings added to **Burp Scanner → Issue activity** automatically.
 
 Press **⏹ Stop** at any point to cancel. ESC also works while the Claude tab is active.
 
@@ -53,7 +53,7 @@ Press **⏹ Stop** at any point to cancel. ESC also works while the Claude tab i
 | Option | What it does |
 |---|---|
 | **Full Vulnerability Scan** | Claude analyzes all proxy traffic and outputs CRITICAL/HIGH/MEDIUM/LOW report |
-| **⏺ Agent Scan** | Autonomous 50-turn loop — Claude sends and chains requests independently |
+| **⏺ Agent Scan** | 3-phase autonomous loop — app map → auto-auth → targeted scan |
 | **Passive Scan** | Analyzes captured traffic without sending requests — findings added to Burp Scanner |
 | **Active Scan** | Sends targeted test payloads, verifies results — confirmed findings added to Scanner |
 | **Verify Burp Findings** | Claude reviews all Burp Scanner issues and marks false positives |
@@ -219,8 +219,8 @@ Always define your scope in Burp (`Target → Scope`) before running scans. Clau
 **On the engagement brief:**
 Keep the brief factual — target URL, tech stack, auth mechanism, testing goals. Don't list expected vulnerabilities. Let Claude discover them.
 
-**On the 50-turn agent limit:**
-The limit exists to prevent runaway API usage. Claude typically finishes in 20–35 turns for a well-scoped target. If you need more coverage on a large app, run Agent Scan in sections with different scopes.
+**On the agent turn limit:**
+There's no hard cap. At every 50 turns, a dialog asks if you want to continue for another 50. Claude typically finishes in 20–35 turns for a well-scoped target. The ⏹ Stop button cancels at any point. If you need more coverage on a large app, run Agent Scan in sections with different scopes.
 
 ---
 
@@ -245,7 +245,7 @@ ClaudeTab is built on [PortSwigger's Montoya API](https://portswigger.net/burp/e
 
 | Component | Detail |
 |---|---|
-| **Model** | `claude-opus-4-5` via Anthropic API |
+| **Model** | `claude-opus-4-5` for scanning/analysis · `claude-haiku-4-5` for report generation |
 | **API** | `https://api.anthropic.com/v1/messages` |
 | **Auth** | API key persisted in `api.persistence().preferences()` |
 | **Agent loop** | Anthropic tool use API — `send_request` tool, up to 50 turns |
@@ -274,4 +274,4 @@ What it can do is handle the volume — so you can focus on the judgment. That's
 ---
 
 *Built by [n0tsaksham](https://github.com/n0tsaksham)*
-*Blog: [I gave Claude a Burp Suite. Here's what happened.](https://github.com/n0tsaksham/ClaudeTab/tree/main#)*
+*Blog: [ClaudeTab: What Happens When AI Reads Your Proxy Traffic](https://medium.com/p/90204f66d1c7)*
